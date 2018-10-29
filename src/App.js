@@ -1,59 +1,68 @@
 import React, { Component } from 'react';
 import './App.css';
-import { subscribeToGroupChat, sendMessage } from './utils/chatSocket'
-
-
+import { subscribeToGroupChat, subscribeToPrivateChats, sendMessage } from './utils/chatSocket'
+import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import UserSideBar from './containers/UserSideBar'
+import Home from './pages/Home'
+import PrivateChat from './pages/PrivateChat'
 class App extends Component {
   state = {
-    inputMessage: '',
     user: {
-      name: 'test_user_1'
-    }
+      name: null
+    },
+    messages: [],
+    privateMessages: {},
   }
 
   componentDidMount() {
     subscribeToGroupChat(
-      this.state.user.name,
       (message) => {
-        console.log('testing')
-        console.log(message.user.name, ' : ', message.text)
+        this.setState({ messages: [...this.state.messages, message] })
+      },
+      (userName) => {
+        this.setState({ user: { name: userName } })
+      },
+
+    )
+    subscribeToPrivateChats(
+      (message) => {
+        const privateMessageKey = message.user.name == this.state.user.name ? message.recipientName : message.user.name
+        this.setState({
+          privateMessages: {
+            ...this.state.privateMessages,
+            [privateMessageKey]: [
+              ...(this.state.privateMessages[privateMessageKey] || []),
+              message
+            ]
+          }
+        })
       }
     )
   }
 
-  componentWillUnmount() {
-
-  }
-
-  _sendMessage = (e) => {
-    e.preventDefault()
-    const { user, inputMessage } = this.state
-    if (inputMessage) {
-      sendMessage({
-        user: user,
-        text: inputMessage
-      })
-      this.setState({ inputMessage: '' })
-    }
-  }
-
-  _handleInputChange = (e) => {
-    e.preventDefault()
-    this.setState({ inputMessage: e.target.value })
-  }
-
   render() {
-    const { inputMessage } = this.state
+    const { messages, user, privateMessages } = this.state
     return (
-      <div >
-        <form onSubmit={this._sendMessage}>
-          <input
-            type='text'
-            value={inputMessage}
-            onChange={this._handleInputChange} />
-          <input type='submit' />
-        </form>
-      </div>
+      <Router>
+        <div className={"with-side-bar"}>
+          <Route
+            exact
+            path="/"
+            render={() => (<Home messages={messages} user={user} />)} />
+          <Route
+            exact
+            path="/private_chat/:userName"
+            render={(props) => {
+              const userName = props.match.params.userName
+              return (
+                <PrivateChat
+                  messages={privateMessages[userName] || []}
+                  user={user}
+                  recipientName={userName} />)
+            }} />
+          <UserSideBar />
+        </div>
+      </Router>
     );
   }
 }

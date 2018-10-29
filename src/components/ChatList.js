@@ -6,10 +6,10 @@ export default class ChatList extends PureComponent {
     return (
       <div>
         {
-          messages.map((message) => (
-            <div>
+          messages.map((message, index) => (
+            <div key={`message_${index}`}>
               <h6>{message.user.name}</h6>
-              <p>{message.text}</p>
+              <p className={"message-text"}>{message.text}</p>
             </div>
           ))
         }

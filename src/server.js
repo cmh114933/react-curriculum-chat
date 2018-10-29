@@ -1,13 +1,24 @@
 const io = require('socket.io')();
 
+let users = []
+let socketIdMap = {}
+
 io.on('connection', (client) => {
-  client.on('subscribeToGroupChat', (userName) => {
-    console.log(userName, 'has subscribed to Group Chat.')
+  client.on('subscribeToGroupChat', () => {
+    const userName = `test_user_${users.length}`
+    users.push(userName)
+    socketIdMap[userName] = client.id
+    client.emit('receiveUserName', userName)
+    io.emit('availableUsers', Object.keys(socketIdMap))
   })
 
   client.on('broadcastMessage', (message) => {
-    console.log(message.user.name, ': ', message.text)
     io.emit('broadcastMessage', message)
+  })
+
+  client.on('privateBroadcastMessage', (message) => {
+    client.emit('privateBroadcastMessage', message)
+    io.to(`${socketIdMap[message.recipientName]}`).emit('privateBroadcastMessage', message);
   })
 
   client.on('disconnect', () => {
