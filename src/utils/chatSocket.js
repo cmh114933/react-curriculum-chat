@@ -1,5 +1,5 @@
-import openSocket from 'socket.io-client';
-const socket = openSocket('http://localhost:8000');
+import io from 'socket.io-client';
+const socket = io('http://localhost:8000');
 
 export function subscribeToGroupChat(callback, receiveUserNameCallback) {
   socket.on('broadcastMessage', (message) => callback(message));

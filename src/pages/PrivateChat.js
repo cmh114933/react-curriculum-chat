@@ -32,7 +32,7 @@ export default class Home extends Component {
     const { user: { name }, messages, recipientName } = this.props
     const { inputMessage } = this.state
     return (
-      <div>
+      <div className={"main-container"}>
         {name && <h3>You are {name}, and you are are talking with {recipientName}</h3>}
         <ChatList messages={messages} />
         <form onSubmit={this._sendMessage}>
